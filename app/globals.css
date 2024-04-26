@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-input[type='file'] {
-  color: transparent;
+@layer base {
+  :root {
+    --background: 0 0% 94.9%;
+    --foreground: 205 35.29% 6.67%;
+    --card: 0 0% 100%;
+    --card-foreground: 205 35.29% 6.67%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 205 35.29% 6.67%;
+    --primary: 205 35.29% 6.67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 198.16 85.39% 65.1%;
+    --secondary-foreground: 205 35.29% 6.67%;
+    --muted: 198.16 85.39% 65.1%;
+    --muted-foreground: 205 35.29% 6.67%;
+    --accent: 198.16 85.39% 65.1%;
+    --accent-foreground: 205 35.29% 6.67%;
+    --destructive: 0 65.33% 44.12%;
+    --destructive-foreground: 0 0% 98.04%;
+    --border: 205 35.29% 6.67%;
+    --input: 205 35.29% 6.67%;
+    --ring: 205 35.29% 6.67%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 205 35.29% 6.67%;
+    --foreground: 0 0% 94.9%;
+    --card: 240 10% 3.92%;
+    --card-foreground: 0 0% 94.9%;
+    --popover: 240 10% 3.92%;
+    --popover-foreground: 0 0% 94.9%;
+    --primary: 0 0% 94.9%;
+    --primary-foreground: 205 35.29% 6.67%;
+    --secondary: 198.16 85.39% 65.1%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 198.13 39.67% 52.55%;
+    --muted-foreground: 0 0% 94.9%;
+    --accent: 0 0% 94.9%;
+    --accent-foreground: 205 35.29% 6.67%;
+    --destructive: 0 62.03% 30.98%;
+    --destructive-foreground: 0 0% 98.04%;
+    --border: 240 3.7% 15.88%;
+    --input: 240 3.7% 15.88%;
+    --ring: 240 4.88% 83.92%;
+    --radius: 0.5rem;
+  }
 }
