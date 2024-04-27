@@ -49,3 +49,8 @@
     --radius: 0.5rem;
   }
 }
+
+#gradient {
+  background: rgb(199,196,255);
+  background: linear-gradient(90deg, rgba(199,196,255,1) 0%, rgba(147,147,255,1) 31%, rgba(129,234,255,1) 100%);
+}

@@ -1,64 +1,148 @@
-import React, { ChangeEvent } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+"use client";
+
+import { CustomImage, useCustomImage } from "@/app/util/imageUtil";
 import { cn } from "@/lib/utils";
+import { Upload, X } from "lucide-react";
+import Image from "next/image";
+import React, { ChangeEvent, useEffect, useState } from "react";
+import { Button } from "./button";
+import { Card, CardContent } from "./card";
 
-const buttonVariants = cva(
-  "cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  },
-);
-
-interface UploadButtonProps extends VariantProps<typeof buttonVariants> {
-  onImageChange?: (file: File) => void;
+interface UploadButtonProps {
+  onImageChange?: ({
+    image,
+    width,
+    height,
+  }: {
+    image: CustomImage | null;
+    width: number;
+    height: number;
+  }) => void;
+  file: File | Blob | null;
+  setFile: (file: File | Blob | null) => void;
+  onClear?: () => void;
   className?: string;
 }
 
-const UploadButton: React.FC<UploadButtonProps> = ({
+const UploadCard: React.FC<UploadButtonProps> = ({
   onImageChange,
-  variant,
-  size,
+  file,
+  setFile,
+  onClear,
   className,
 }) => {
+  const { image, width, height } = useCustomImage(file);
+  const [[actualWidth, actualHeight], setActualDimensions] = useState([
+    width,
+    height,
+  ]);
+  const [drag, setDrag] = useState(false);
+
+  useEffect(() => {
+    if (width && height) {
+      if (width > 500 || height > 500) {
+        const ratio = Math.min(500 / width, 500 / height);
+        setActualDimensions([width * ratio, height * ratio]);
+      } else {
+        setActualDimensions([width, height]);
+      }
+    } else {
+      setActualDimensions([500, 500]);
+    }
+  }, [width, height]);
+
+  useEffect(() => {
+    onImageChange?.({ image, width, height });
+  }, [image, width, height]);
+
+  const clear = () => {
+    setDrag(false);
+    setFile(null);
+    onClear?.();
+  };
+
   const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target?.files?.[0];
+    setDrag(false);
     if (!file || !file.type.startsWith("image")) return;
-    onImageChange?.(file);
+    setFile(file);
     e.target.value = "";
   };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDrag(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (!file || !file.type.startsWith("image")) return;
+    setFile(file);
+  };
+
   return (
-    <div>
-      <label
-        htmlFor="files"
-        className={cn(buttonVariants({ variant, size, className }))}
-      >
-        Upload image
+    <div
+      onDrop={handleDrop}
+      onDragOver={e => {
+        e.preventDefault();
+        setDrag(true);
+      }}
+      onDragStart={() => setDrag(true)}
+      onDragEnter={() => setDrag(true)}
+      onDragExit={() => setDrag(false)}
+      onDragLeave={() => setDrag(false)}
+    >
+      <label htmlFor="files">
+        <Card>
+          <CardContent
+            className={cn(
+              "overflow-hidden flex justify-center items-center p-8",
+              "transition-all duration-1000 relative cursor-pointer",
+              !image && "h-[500px] w-[500px]",
+              className,
+            )}
+            style={
+              actualWidth && actualHeight
+                ? { width: actualWidth, height: actualHeight }
+                : undefined
+            }
+          >
+            {image && (
+              <>
+                <Button
+                  className="absolute top-2 right-3.5 p-1 h-fit w-fit"
+                  onClick={e => {
+                    e.preventDefault();
+                    clear();
+                  }}
+                  variant="outline"
+                  size="icon"
+                >
+                  <X />
+                </Button>
+                <Image
+                  src={image.url}
+                  alt=""
+                  width={Math.min(width, 500)}
+                  height={Math.min(height, 500)}
+                />
+              </>
+            )}
+            {!image && (
+              <div
+                className={cn(
+                  "w-full h-full flex flex-col justify-center items-center rounded transition-colors bg-card duration-300",
+                  "text-gray-400",
+                  drag && "bg-green-200",
+                )}
+              >
+                <Upload className="h-12 w-12" strokeWidth={1} />
+                {drag ? "Drop image here" : "Click or drag to upload"}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </label>
       <input
         id="files"
-        className="invisible w-0"
+        className="hidden"
         type="file"
         title=" "
         accept="image/png, image/jpg, image/jpeg"
@@ -68,4 +152,4 @@ const UploadButton: React.FC<UploadButtonProps> = ({
   );
 };
 
-export default UploadButton;
+export default UploadCard;
