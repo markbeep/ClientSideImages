@@ -21,6 +21,7 @@ interface UploadButtonProps {
   file: File | Blob | null;
   setFile: (file: File | Blob | null) => void;
   onClear?: () => void;
+  loading?: boolean;
   className?: string;
 }
 
@@ -29,6 +30,7 @@ const UploadCard: React.FC<UploadButtonProps> = ({
   file,
   setFile,
   onClear,
+  loading,
   className,
 }) => {
   const { image, width, height } = useCustomImage(file);
@@ -37,6 +39,7 @@ const UploadCard: React.FC<UploadButtonProps> = ({
     height,
   ]);
   const [drag, setDrag] = useState(false);
+  const [imageChanged, setImageChanged] = useState(false);
 
   useEffect(() => {
     if (width && height) {
@@ -52,8 +55,12 @@ const UploadCard: React.FC<UploadButtonProps> = ({
   }, [width, height]);
 
   useEffect(() => {
-    onImageChange?.({ image, width, height });
-  }, [image, width, height]);
+    // prevent calling onImageChanged if 'file' is updated but 'image' is not
+    if (imageChanged) {
+      setImageChanged(false);
+      onImageChange?.({ image, width, height });
+    }
+  }, [image, width, height, imageChanged]);
 
   const clear = () => {
     setDrag(false);
@@ -67,6 +74,7 @@ const UploadCard: React.FC<UploadButtonProps> = ({
     if (!file || !file.type.startsWith("image")) return;
     setFile(file);
     e.target.value = "";
+    setImageChanged(true);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -75,6 +83,7 @@ const UploadCard: React.FC<UploadButtonProps> = ({
     const file = e.dataTransfer?.files?.[0];
     if (!file || !file.type.startsWith("image")) return;
     setFile(file);
+    setImageChanged(true);
   };
 
   return (
@@ -133,8 +142,14 @@ const UploadCard: React.FC<UploadButtonProps> = ({
                   drag && "bg-green-200",
                 )}
               >
-                <Upload className="h-12 w-12" strokeWidth={1} />
-                {drag ? "Drop image here" : "Click or drag to upload"}
+                {loading ? (
+                  <>Loading...</>
+                ) : (
+                  <>
+                    <Upload className="h-12 w-12" strokeWidth={1} />
+                    {drag ? "Drop image here" : "Click or drag to upload"}
+                  </>
+                )}
               </div>
             )}
           </CardContent>

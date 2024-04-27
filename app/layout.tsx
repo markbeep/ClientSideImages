@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
+import FadeInProvider from "./fadeProvider";
 
 export const metadata: Metadata = {
   title: "Cursed Images",
@@ -16,10 +17,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <main
-          className="flex min-h-screen flex-col items-center justify-center bg-custom-grey bg-background"
+          className="flex min-h-screen flex-col items-center justify-center bg-custom-grey bg-background relative"
           id="gradient"
         >
-          {children}
+          <FadeInProvider>{children}</FadeInProvider>
         </main>
       </body>
     </html>

@@ -1,38 +1,68 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useContext, useEffect } from "react";
+import { FadeInContext } from "./fadeProvider";
+import { Button } from "@/components/ui/button";
+
+export const paths = [
+  {
+    path: "/",
+    name: "Home",
+  },
+  {
+    path: "/base64",
+    name: "Base 64",
+  },
+  {
+    path: "/gaslight",
+    name: "Gaslight",
+  },
+];
 
 interface HomePageProps {}
 
 const HomePage: React.FC<HomePageProps> = () => {
-  const [show, setShow] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const setShow = useContext(FadeInContext);
 
+  const handleLink = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShow(false);
+    setTimeout(() => {
+      router.push(path);
+    }, 500);
+  };
+
+  // fade in
   useEffect(() => {
     setShow(true);
   }, []);
 
-  const handleLink = (path: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!show) return;
-    setShow(false);
-    setTimeout(() => {
-      router.push(path);
-    }, 1000);
-  };
-
   return (
-    <ul
-      className={cn("transition-opacity duration-1000", !show && "opacity-0")}
-    >
-      <li>
-        <Link href="/base64" onClick={handleLink("/base64")}>
-          Base 64
-        </Link>
-      </li>
+    <ul className="flex flex-col gap-2">
+      {paths
+        .filter(({ path }) => path !== "/")
+        .map(({ path, name }) => (
+          <li key={path}>
+            <Button
+              variant="outline"
+              asChild={path !== pathname}
+              disabled={path === pathname}
+              className="w-full"
+            >
+              {path === pathname ? (
+                name
+              ) : (
+                <Link href={path} onClick={handleLink(path)}>
+                  {name}
+                </Link>
+              )}
+            </Button>
+          </li>
+        ))}
     </ul>
   );
 };
