@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Header from "./header";
 
@@ -12,10 +13,16 @@ const FadeInProvider: React.FC<
   React.PropsWithChildren<FadeInProviderProps>
 > = ({ children }) => {
   const [show, setShow] = useState(false);
+  const pathname = usePathname();
+  const [previousPath, setPreviousPath] = useState<null | string>(null);
 
   useEffect(() => {
-    setShow(true);
-  }, []);
+    if (previousPath === null || pathname !== previousPath) {
+      setShow(true);
+      setPreviousPath(pathname);
+      return;
+    }
+  }, [pathname, previousPath]);
 
   return (
     <FadeInContext.Provider value={setShow}>

@@ -1,8 +1,8 @@
 "use client";
 
-import { CustomImage, useCustomImage } from "@/app/util/imageUtil";
+import { CustomImage, useCustomImage } from "@/lib/imageUtil";
 import { cn } from "@/lib/utils";
-import { Upload, X } from "lucide-react";
+import { Check, Save, Upload, X } from "lucide-react";
 import Image from "next/image";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Button } from "./button";
@@ -21,7 +21,8 @@ interface UploadButtonProps {
   file: File | Blob | null;
   setFile: (file: File | Blob | null) => void;
   onClear?: () => void;
-  loading?: boolean;
+  onSave?: () => void;
+  savingSate: "unknown" | "idle" | "saving" | "saved";
   className?: string;
 }
 
@@ -30,29 +31,13 @@ const UploadCard: React.FC<UploadButtonProps> = ({
   file,
   setFile,
   onClear,
-  loading,
+  onSave,
+  savingSate,
   className,
 }) => {
   const { image, width, height } = useCustomImage(file);
-  const [[actualWidth, actualHeight], setActualDimensions] = useState([
-    width,
-    height,
-  ]);
   const [drag, setDrag] = useState(false);
   const [imageChanged, setImageChanged] = useState(false);
-
-  useEffect(() => {
-    if (width && height) {
-      if (width > 500 || height > 500) {
-        const ratio = Math.min(500 / width, 500 / height);
-        setActualDimensions([width * ratio, height * ratio]);
-      } else {
-        setActualDimensions([width, height]);
-      }
-    } else {
-      setActualDimensions([500, 500]);
-    }
-  }, [width, height]);
 
   useEffect(() => {
     // prevent calling onImageChanged if 'file' is updated but 'image' is not
@@ -60,7 +45,7 @@ const UploadCard: React.FC<UploadButtonProps> = ({
       setImageChanged(false);
       onImageChange?.({ image, width, height });
     }
-  }, [image, width, height, imageChanged]);
+  }, [image, width, height, imageChanged, onImageChange]);
 
   const clear = () => {
     setDrag(false);
@@ -99,33 +84,55 @@ const UploadCard: React.FC<UploadButtonProps> = ({
       onDragLeave={() => setDrag(false)}
     >
       <label htmlFor="files">
-        <Card>
+        <Card
+          className={cn(
+            "transition-all duration-1000 max-h-[min(500px,80vw)] max-w-[min(500px,80vw)]",
+            !image && "h-[80vw] w-[80vw]",
+          )}
+        >
           <CardContent
             className={cn(
-              "overflow-hidden flex justify-center items-center p-8",
-              "transition-all duration-1000 relative cursor-pointer",
-              !image && "h-[500px] w-[500px]",
+              "overflow-hidden flex justify-center items-center p-4 sm:p-8",
+              "relative cursor-pointer w-full h-full",
               className,
             )}
-            style={
-              actualWidth && actualHeight
-                ? { width: actualWidth, height: actualHeight }
-                : undefined
-            }
           >
             {image && (
               <>
-                <Button
-                  className="absolute top-2 right-3.5 p-1 h-fit w-fit"
-                  onClick={e => {
-                    e.preventDefault();
-                    clear();
-                  }}
-                  variant="outline"
-                  size="icon"
-                >
-                  <X />
-                </Button>
+                <div className="absolute top-2 right-3.5 flex flex-row gap-1 items-center justify-center">
+                  <Button
+                    title="Save image"
+                    className={cn(
+                      "p-1 h-fit w-fit transition-opacity duration-500",
+                      savingSate === "saving" && "animate-pulse",
+                      savingSate === "saved" && "text-green-800",
+                      savingSate === "unknown" && "opacity-0",
+                    )}
+                    onClick={e => {
+                      e.preventDefault();
+                      onSave?.();
+                    }}
+                    disabled={savingSate === "saving" || savingSate === "saved"}
+                    variant="outline"
+                    size="icon"
+                  >
+                    {savingSate === "saved" ? <Check /> : <Save />}
+                  </Button>
+
+                  <Button
+                    title="Clear image"
+                    className="p-1 h-fit w-fit"
+                    onClick={e => {
+                      e.preventDefault();
+                      clear();
+                    }}
+                    variant="outline"
+                    size="icon"
+                  >
+                    <X />
+                  </Button>
+                </div>
+
                 <Image
                   src={image.url}
                   alt=""
@@ -142,7 +149,7 @@ const UploadCard: React.FC<UploadButtonProps> = ({
                   drag && "bg-green-200",
                 )}
               >
-                {loading ? (
+                {savingSate === "unknown" ? (
                   <>Loading...</>
                 ) : (
                   <>

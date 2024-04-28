@@ -5,7 +5,21 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useContext } from "react";
 import { FadeInContext } from "./fadeProvider";
-import { paths } from "./home";
+
+const paths = [
+  {
+    path: "/",
+    name: "Home",
+  },
+  {
+    path: "/base64",
+    name: "Base 64",
+  },
+  {
+    path: "/gaslight",
+    name: "Gaslight",
+  },
+];
 
 interface HeaderProps {}
 
@@ -24,7 +38,7 @@ const Header: React.FC<HeaderProps> = () => {
   };
 
   return (
-    <div className="absolute top-0 left-0 w-full flex items-center px-10 py-4 gap-2">
+    <div className="absolute top-0 left-0 w-full flex items-center px-10 py-4 gap-2 z-10">
       {paths.map(({ path, name }) => (
         <Button
           variant="outline"

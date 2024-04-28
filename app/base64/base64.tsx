@@ -1,26 +1,16 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import React, { useContext, useEffect, useState } from "react";
-import UploadCard from "../../components/ui/upload";
-import { compressImage, fromBase64, getBase64 } from "../util/imageUtil";
-import { FadeInContext } from "../fadeProvider";
+import UploadPage from "@/components/uploadPage";
+import React, { useEffect, useState } from "react";
+import { compressImage, fromBase64, getBase64 } from "../../lib/imageUtil";
 
 export const Base64: React.FC = () => {
   const [file, setFile] = useState<File | Blob | null>(null);
-  const [loadingState, setLoadingState] = useState<
+  const [savingState, setSavingState] = useState<
     "unknown" | "idle" | "saving" | "saved"
   >("unknown");
-  const setShow = useContext(FadeInContext);
 
-  // fade in
-  useEffect(() => {
-    setShow(true);
-  }, []);
-
-  const clear = () => {
-    setLoadingState("idle");
+  const onClear = () => {
     localStorage.removeItem("image");
   };
 
@@ -28,21 +18,22 @@ export const Base64: React.FC = () => {
   useEffect(() => {
     const base64 = localStorage.getItem("image");
     if (!base64) {
-      setTimeout(() => setLoadingState("idle"), 1000);
+      setTimeout(() => setSavingState("idle"), 1000);
       return;
     }
     const img = fromBase64(base64);
     if (!img) {
       console.error("Failed to convert base64 to image");
-      clear();
+      onClear();
       return;
     }
+    // Loading image too quickly causes flickering
     setTimeout(() => setFile(img), 800);
-    setTimeout(() => setLoadingState("saved"), 1000);
+    setTimeout(() => setSavingState("saved"), 1000);
   }, []);
 
   const onSave = async () => {
-    setLoadingState("saving");
+    setSavingState("saving");
     if (!file) return;
     let compressed: Blob | null = file;
     // Compress image until it can be saved without error
@@ -57,7 +48,7 @@ export const Base64: React.FC = () => {
 
       if (!compressed) {
         console.error("Failed to compress image");
-        clear();
+        onClear();
         return;
       }
 
@@ -67,45 +58,37 @@ export const Base64: React.FC = () => {
       );
     }
     setFile(compressed);
-    setTimeout(() => setLoadingState("saved"), 1000);
+    // Changing states too quick looks odd
+    setTimeout(() => setSavingState("saved"), 300);
   };
-
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center",
-        "transition-all duration-1000 gap-0",
-        file && "gap-2",
-      )}
+    <UploadPage
+      file={file}
+      setFile={setFile}
+      savingState={savingState}
+      setSavingState={setSavingState}
+      onClear={onClear}
+      onSave={onSave}
     >
-      <UploadCard
-        className="transition-all duration-500 ease-in-out"
-        onImageChange={() => setLoadingState("idle")}
-        onClear={clear}
-        file={file}
-        loading={loadingState === "unknown"}
-        setFile={setFile}
-      />
-      <div
-        className={cn(
-          "flex gap-2 transition-all justify-end w-full overflow-hidden duration-500",
-          !file && "w-0 opacity-0 ml-0",
-        )}
-      >
-        <Button
-          variant="outline"
-          disabled={
-            !file || loadingState === "saved" || loadingState === "saving"
-          }
-          onClick={onSave}
-        >
-          {loadingState === "saving"
-            ? "Saving..."
-            : loadingState === "saved"
-            ? "Saved!"
-            : "Save"}
-        </Button>
-      </div>
-    </div>
+      <p>
+        {`Websites can use up to 5MB of local storage. This data persists across
+        refreshes and even browser restarts. This is a good way for browsers to
+        store user-specific information like settings.`}
+      </p>
+      <p className="mt-2">
+        {`The first limitation of local storage is that it only allows for strings
+        to be stored. Because of this any images uploaded are first converted to
+        base64. This increases the file size by roughly 33%.`}
+      </p>
+      <p className="mt-2">
+        {`The second limitation is that there's a max size of 5MB. This means huge
+        images can't be stored there. Any images that would be too large to fit
+        are compressed down until they do.`}
+      </p>
+      <p className="mt-2">
+        {`If you clear the website's data (usually done together with clearing
+        cookies), the image will also be removed.`}
+      </p>
+    </UploadPage>
   );
 };

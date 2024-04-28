@@ -16,12 +16,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <main
-          className="flex min-h-screen flex-col items-center justify-center bg-custom-grey bg-background relative"
-          id="gradient"
-        >
-          <FadeInProvider>{children}</FadeInProvider>
-        </main>
+        <div className="min-h-screen relative" id="gradient">
+          <FadeInProvider>
+            <main className="flex min-h-screen flex-col items-center justify-center relative">
+              {children}
+            </main>
+          </FadeInProvider>
+        </div>
       </body>
     </html>
   );
